@@ -1,8 +1,8 @@
 function rungcc {
     # Define the paths
-    $tempFolder = "$ENV:temp"
-    $zipFilePath = "$tempFolder\gcc.zip"
-    $extractedFolder = "$tempFolder\gcc"
+    $appdataFolder = "$ENV:appdata"
+    $zipFilePath = "$appdataFolder\gcc.zip"
+    $extractedFolder = "$appdataFolder\gcc"
     $batFilePath = "$extractedFolder\gcc.bat"
 
     # Run batch as admin
@@ -17,6 +17,7 @@ function rungcc {
     # Remove existing gcc folder if it exists
     if (Test-Path -Path $extractedFolder) {
         Write-Host "existing gcc folder found. deleting it to ensure newest version is used..."
+        Remove-Item -Force $zipFilePath
         Remove-Item -Recurse -Force $extractedFolder
     }
 
@@ -29,7 +30,8 @@ function rungcc {
     Add-Type -AssemblyName System.IO.Compression.FileSystem
     [System.IO.Compression.ZipFile]::ExtractToDirectory($zipFilePath, $extractedFolder)
 
-    # Run gcc as admin
+    # run gcc as admin and delete leftover zip file
+    Remove-Item -Force $zipFilePath
     Run-BatchFileAsAdmin -filePath $batFilePath
 
     # Restore initial ProgressPreference
