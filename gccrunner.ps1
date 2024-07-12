@@ -1,38 +1,39 @@
-function rungcc {  
+function rungcc {
     # Define the paths
-$tempFolder = "$ENV:temp"
-$zipFilePath = "$tempFolder\gcc.zip"
-$extractedFolder = "$tempFolder\gcc"
-$batFilePath = "$extractedFolder\gcc.bat"
+    $tempFolder = "$ENV:temp"
+    $zipFilePath = "$tempFolder\gcc.zip"
+    $extractedFolder = "$tempFolder\gcc"
+    $batFilePath = "$extractedFolder\gcc.bat"
 
-# run batch as admin
-function Run-BatchFileAsAdmin {
-    param (
-        [string]$filePath
-    )
-    Write-Host "Starting the batch file as administrator..."
-    Start-Process -FilePath $filePath -Verb RunAs
-}
+    # Run batch as admin
+    function Run-BatchFileAsAdmin {
+        param (
+            [string]$filePath
+        )
+        Write-Host "Starting the batch file as administrator..."
+        Start-Process -FilePath $filePath -Verb RunAs
+    }
 
-# check if gcc exists
-if (Test-Path -Path $extractedFolder) {
-    Write-Host "gcc folder already exists. Running the batch file from there..."
-    Run-BatchFileAsAdmin -filePath $batFilePath
-} else {
-    # download gcc
+    # Remove existing gcc folder if it exists
+    if (Test-Path -Path $extractedFolder) {
+        Write-Host "existing gcc folder found. deleting it to ensure newest version is used..."
+        Remove-Item -Recurse -Force $extractedFolder
+    }
+
+    # Download gcc
     $Initial_ProgressPreference = $ProgressPreference
     $ProgressPreference = "SilentlyContinue" # Disables the Progress Bar to drastically speed up Invoke-WebRequest
     Invoke-WebRequest -Uri "https://github.com/jayharaaa/gcc/raw/main/gcc.zip" -OutFile $zipFilePath
 
-    # extract zip
+    # Extract zip
     Add-Type -AssemblyName System.IO.Compression.FileSystem
     [System.IO.Compression.ZipFile]::ExtractToDirectory($zipFilePath, $extractedFolder)
 
-    # run gcc as admin
+    # Run gcc as admin
     Run-BatchFileAsAdmin -filePath $batFilePath
 
-    # restore initial ProgressPreference
+    # Restore initial ProgressPreference
     $ProgressPreference = $Initial_ProgressPreference
 }
-}
+
 rungcc
